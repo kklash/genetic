@@ -42,7 +42,7 @@ func testCrossoverFunc(t *testing.T, crossover genetic.CrossoverFunc[[]byte]) er
 	return nil
 }
 
-func TestSinglePointCrossover(t *testing.T) {
+func TestCrossover(t *testing.T) {
 	if err := testCrossoverFunc(t, genetic.NPointCrossover[[]byte](1)); err != nil {
 		t.Errorf(err.Error())
 	}

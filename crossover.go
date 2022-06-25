@@ -11,7 +11,7 @@ import (
 //
 // SinglePointCrossover is analagous to NPointCrossover(1).
 func SinglePointCrossover[T ~[]E, E any](male, female T) (T, T) {
-	return NPointCrossover[[]E](1)(male, female)
+	return NPointCrossover[T](1)(male, female)
 }
 
 // NPointCrossover crosses two genomes by choosing pointCount random break points in the domain of
