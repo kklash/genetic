@@ -57,8 +57,8 @@ func NPointCrossover[T ~[]E, E any](pointCount int) CrossoverFunc[T] {
 
 // UniformCrossover assembles two child genomes from two parents by randomly picking
 // individual genome elements from parents. Randomization is exclusive: if one child genome
-// inherits a certain allele index from its male parent, the sister genome is guaranteed
-// to inherit the same allele index from the female parent.
+// inherits one allele from its male parent, the sister genome is guaranteed to inherit the
+// opposite allele from the female parent.
 func UniformCrossover[T ~[]E, E any](male, female T) (T, T) {
 	dnaLength := len(male)
 	if len(female) != dnaLength {

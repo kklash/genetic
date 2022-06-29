@@ -26,6 +26,7 @@ Terminology that's important to know before using Genetic Algorithms:
 - Mutations: Random variations in genome structure or content occurring during crossover.
 - Selection: The process of picking which genomes will crossover to produce the next generation of genomes.
 - Elitism: Preferential treatment to the highest-scoring genomes, allowing them to survive into the next generation. This prevents regression and loss of quality solutions.
+- Allele: A candidate gene for a specific location on the Genome. If two genes are alleles of each other, they are evolutionary competitors.
 
 ## Usage
 
