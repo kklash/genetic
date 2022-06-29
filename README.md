@@ -46,18 +46,33 @@ func genesis() []byte {
 }
 ```
 
-We need a `FitnessFunc[T]` which scores each genome on how many of its bytes match the target string. We'll use a minimum fitness of 1, which means our maximum fitness is 34.
+We need a `FitnessFunc[T]` which scores every genome on how many of its bytes match the target string. We'll use a minimum fitness of 1, which means our maximum fitness is 34.
 
 ```go
-func fitness(guess []byte) (fitness int) {
-  fitness = 1
-  for i, b := range guess {
-    if b == bytesToGuess[i] {
+func fitnessFn(guesses [][]byte, fitnesses []int) {
+  for i, guess := range guesses {
+    fitnesses[i] = 1
+    for j, b := range guess {
+      if b == bytesToGuess[j] {
+        fitnesses[i]++
+      }
+    }
+  }
+}
+```
+
+_Since this is a static fitness function (its output is not dependent on the other genomes in the population), we can optimize this slightly with the `StaticFitnessFunc` utility._
+
+```go
+fitnessFn := genetic.StaticFitnessFunc(func(guess []byte) int {
+  fitness := 1
+  for j, b := range guess {
+    if b == bytesToGuess[j] {
       fitness++
     }
   }
-  return
-}
+  return fitness
+})
 ```
 
 We need a `CrossoverFunc[T]` which combines two genomes together to produce offspring. `genetic` provides several simple crossover functions which work on any generic slice type genome. Let's use `UniformCrossover`, which produces offspring whose genomes are a random mix of their parents' genomes.

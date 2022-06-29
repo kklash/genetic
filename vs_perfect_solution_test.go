@@ -113,7 +113,7 @@ func TestAgainstPerfectSolutionAlgorithm(t *testing.T) {
 			50,
 			problem.RandomSolution,
 			solutionCrossover,
-			solutionFitness,
+			genetic.StaticFitnessFunc(solutionFitness),
 			genetic.TournamentSelection[*KnapsackSolution](3),
 			solutionMutation(0.02),
 		)

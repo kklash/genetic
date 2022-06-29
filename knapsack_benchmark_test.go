@@ -15,7 +15,7 @@ func benchEvolveOnce(b *testing.B, selection genetic.SelectionFunc[*KnapsackSolu
 		populationSize,
 		problem.RandomSolution,
 		solutionCrossover,
-		solutionFitness,
+		genetic.StaticFitnessFunc(solutionFitness),
 		selection,
 		solutionMutation(0.02),
 	)

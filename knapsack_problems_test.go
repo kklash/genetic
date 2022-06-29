@@ -86,7 +86,7 @@ func TestGenetic(t *testing.T) {
 			60,
 			perfectSolution.Problem.RandomSolution,
 			solutionCrossover,
-			solutionFitness,
+			genetic.StaticFitnessFunc(solutionFitness),
 			genetic.TournamentSelection[*KnapsackSolution](3),
 			solutionMutation(0.1),
 		)
