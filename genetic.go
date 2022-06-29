@@ -17,8 +17,13 @@ type GenesisFunc[T any] func() T
 // Crossover functions should NOT handle mutation.
 type CrossoverFunc[T any] func(male, female T) (T, T)
 
-// FitnessFunc returns the fitness of any genome.
-type FitnessFunc[T any] func(T) int
+// FitnessFunc calculates the fitnesses of all genomes in a population,
+// storing the results in the given fitnesses slice.
+//
+// Some entries in fitnesses may be prepopulated - these are cached fitnesses for elite
+// genomes surviving from the previous generation. A FitnessFunc may recalculate or
+// skip them as needed.
+type FitnessFunc[T any] func(allGenomes []T, fitnesses []int)
 
 // MutationFunc randomly alters the DNA of the given genome, in the hopes that
 // some mutatations will result in fitter genomes.
@@ -41,7 +46,7 @@ type Population[T any] struct {
 	// Crossover is used to recombine two genomes of type T.
 	Crossover CrossoverFunc[T]
 
-	// Fitness computes the fitness of a genome of type T.
+	// Fitness computes the fitnesses of a population of genomes of type T.
 	Fitness FitnessFunc[T]
 
 	// Selection selects which genomes will reproduce, and which genomes they will mate with.
@@ -86,9 +91,9 @@ func NewPopulation[T any](
 	for i := 0; i < size; i++ {
 		genome := generate()
 		population.genomes[i] = genome
-		population.fitnesses[i] = fitness(genome)
 	}
 
+	fitness(population.genomes, population.fitnesses)
 	sortWithValues(sortDescending, population.genomes, population.fitnesses)
 
 	return population
@@ -96,14 +101,13 @@ func NewPopulation[T any](
 
 // EvolveOnce evolves the population by one generation, replacing the current population
 // with their children. It calls the population's selection function once, its fitness
-// function once for every current genome, and crossover once for every mating pair needed to
-// repopulate.
+// function once, and crossover once for every mating pair needed to repopulate.
 func (population *Population[T]) EvolveOnce(elitism int) {
 	elitism = max(elitism, 0)
 	matingPairs := population.Selection(population.genomes, population.fitnesses)
 
-	newGenomes := make([]T, 0, len(matingPairs)*2+elitism)
-	if cap(newGenomes) < len(population.genomes) {
+	childGenomes := make([]T, 0, len(matingPairs)*2+elitism)
+	if cap(childGenomes) < len(population.genomes) {
 		panic("too few mating pairs returned by population's SelectionFunc")
 	}
 
@@ -113,21 +117,22 @@ func (population *Population[T]) EvolveOnce(elitism int) {
 			population.Mutation(offspring1)
 			population.Mutation(offspring2)
 		}
-		newGenomes = append(newGenomes, offspring1, offspring2)
+		childGenomes = append(childGenomes, offspring1, offspring2)
 	}
 
-	newFitnesses := make([]int, len(newGenomes), len(newGenomes)+elitism)
-	for i, genome := range newGenomes {
-		newFitnesses[i] = population.Fitness(genome)
-	}
+	nextGenomes := make([]T, len(childGenomes)+elitism)
+	copy(nextGenomes, population.genomes[:elitism])
+	copy(nextGenomes[elitism:], childGenomes)
 
-	newGenomes = append(newGenomes, population.genomes[:elitism]...)
-	newFitnesses = append(newFitnesses, population.fitnesses[:elitism]...)
+	nextFitnesses := make([]int, len(childGenomes)+elitism)
+	copy(nextFitnesses, population.fitnesses[:elitism])
 
-	sortWithValues(sortDescending, newGenomes, newFitnesses)
+	population.Fitness(nextGenomes, nextFitnesses)
 
-	population.genomes = newGenomes[:len(population.genomes)]
-	population.fitnesses = newFitnesses[:len(population.fitnesses)]
+	sortWithValues(sortDescending, nextGenomes, nextFitnesses)
+
+	population.genomes = nextGenomes[:len(population.genomes)]
+	population.fitnesses = nextFitnesses[:len(population.fitnesses)]
 }
 
 // Evolve evolves the population until either a genome is produced which meets the

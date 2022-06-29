@@ -28,16 +28,16 @@ func ExamplePopulation() {
 		// CrossoverFunc[[]byte] - combines two parent genomes into two new child genomes.
 		genetic.UniformCrossover[[]byte],
 
-		// FitnessFunc[[]byte] - determines how accurate the guess genome is.
-		func(guess []byte) (fitness int) {
-			fitness = 1
-			for i, b := range guess {
-				if b == bytesToGuess[i] {
+		// FitnessFunc[[]byte] - determines how accurate each guess genome is.
+		genetic.StaticFitnessFunc(func(guess []byte) int {
+			fitness := 1
+			for j, b := range guess {
+				if b == bytesToGuess[j] {
 					fitness++
 				}
 			}
-			return
-		},
+			return fitness
+		}),
 
 		// SelectionFunc[[]byte] - selects which genomes will reproduce.
 		genetic.TournamentSelection[[]byte](3),
