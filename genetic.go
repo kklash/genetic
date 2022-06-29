@@ -101,14 +101,13 @@ func NewPopulation[T any](
 
 // EvolveOnce evolves the population by one generation, replacing the current population
 // with their children. It calls the population's selection function once, its fitness
-// function once for every current genome, and crossover once for every mating pair needed to
-// repopulate.
+// function once, and crossover once for every mating pair needed to repopulate.
 func (population *Population[T]) EvolveOnce(elitism int) {
 	elitism = max(elitism, 0)
 	matingPairs := population.Selection(population.genomes, population.fitnesses)
 
-	newGenomes := make([]T, 0, len(matingPairs)*2+elitism)
-	if cap(newGenomes) < len(population.genomes) {
+	childGenomes := make([]T, 0, len(matingPairs)*2+elitism)
+	if cap(childGenomes) < len(population.genomes) {
 		panic("too few mating pairs returned by population's SelectionFunc")
 	}
 
@@ -118,19 +117,22 @@ func (population *Population[T]) EvolveOnce(elitism int) {
 			population.Mutation(offspring1)
 			population.Mutation(offspring2)
 		}
-		newGenomes = append(newGenomes, offspring1, offspring2)
+		childGenomes = append(childGenomes, offspring1, offspring2)
 	}
 
-	newFitnesses := make([]int, len(newGenomes), len(newGenomes)+elitism)
+	nextGenomes := make([]T, len(childGenomes)+elitism)
+	copy(nextGenomes, population.genomes[:elitism])
+	copy(nextGenomes[elitism:], childGenomes)
 
-	newGenomes = append(newGenomes, population.genomes[:elitism]...)
-	newFitnesses = append(newFitnesses, population.fitnesses[:elitism]...)
-	population.Fitness(newGenomes, newFitnesses)
+	nextFitnesses := make([]int, len(childGenomes)+elitism)
+	copy(nextFitnesses, population.fitnesses[:elitism])
 
-	sortWithValues(sortDescending, newGenomes, newFitnesses)
+	population.Fitness(nextGenomes, nextFitnesses)
 
-	population.genomes = newGenomes[:len(population.genomes)]
-	population.fitnesses = newFitnesses[:len(population.fitnesses)]
+	sortWithValues(sortDescending, nextGenomes, nextFitnesses)
+
+	population.genomes = nextGenomes[:len(population.genomes)]
+	population.fitnesses = nextFitnesses[:len(population.fitnesses)]
 }
 
 // Evolve evolves the population until either a genome is produced which meets the
